@@ -38,15 +38,19 @@ const formatRupiah = (val) => {
 const fetchDashboardData = async () => {
   isLoading.value = true;
   try {
-    // 1. Ambil jumlah karyawan riil
+    // 1. Ambil jumlah karyawan riil dari /employees
     const empRes = await client.get('/employees');
-    // Cek apakah response berupa paginasi Laravel (total) atau array biasa
-    if (empRes.data?.total !== undefined) {
+    
+    // Periksa struktur response bersarang (status: success -> data -> total / rows)
+    const empData = empRes.data?.data || empRes.data;
+    if (empData && typeof empData.total !== 'undefined') {
+      totalEmployees.value = empData.total;
+    } else if (Array.isArray(empData?.data)) {
+      totalEmployees.value = empData.data.length;
+    } else if (Array.isArray(empData)) {
+      totalEmployees.value = empData.length;
+    } else if (typeof empRes.data?.total !== 'undefined') {
       totalEmployees.value = empRes.data.total;
-    } else if (Array.isArray(empRes.data)) {
-      totalEmployees.value = empRes.data.length;
-    } else if (Array.isArray(empRes.data?.data)) {
-      totalEmployees.value = empRes.data.total || empRes.data.data.length;
     }
 
     // 2. Ambil transaksi penggajian periode bulan aktif saat ini
@@ -57,14 +61,18 @@ const fetchDashboardData = async () => {
       },
     });
 
-    // Hitung total penggajian (jika backend mengembalikan summary atau list transaksi)
-    if (salaryRes.data?.summary?.total_paid !== undefined) {
-      totalPayrollCurrentMonth.value = salaryRes.data.summary.total_paid;
-    } else if (Array.isArray(salaryRes.data?.data)) {
-      totalPayrollCurrentMonth.value = salaryRes.data.data.reduce(
-        (sum, item) => sum + Number(item.net_salary || 0),
-        0
-      );
+    const salaryBody = salaryRes.data;
+    // Cek ringkasan total_paid atau hitung dari data transaksi
+    if (salaryBody?.summary?.total_paid !== undefined) {
+      totalPayrollCurrentMonth.value = salaryBody.summary.total_paid;
+    } else {
+      const transactionList = salaryBody?.data?.data || salaryBody?.data || [];
+      if (Array.isArray(transactionList)) {
+        totalPayrollCurrentMonth.value = transactionList.reduce(
+          (sum, item) => sum + Number(item.net_salary || 0),
+          0
+        );
+      }
     }
   } catch (error) {
     console.error('Gagal mengambil ringkasan data dashboard:', error);
