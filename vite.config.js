@@ -6,20 +6,32 @@ import path from 'path';
 export default defineConfig({
   server: {
     port: 5173,
-    
     proxy: {
       '/api': {
-        target: 'http://sipeg.ndp-tech.my.id',
+        target: 'https://sipeg.ndp-tech.my.id',
         changeOrigin: true,
-        secure: false
-      }
-    }
+        secure: false,
+      },
+    },
   },
 
   plugins: [vue()],
+
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+    },
+  },
+
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        },
+      },
     },
   },
 });
