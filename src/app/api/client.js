@@ -1,11 +1,11 @@
 import axios from 'axios';
 
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://sipeg.ndp-tech.my.id/api',
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-    'X-API-KEY': 'taku_nodp_corp_2026', // Sesuai file .env backend
+    'X-API-KEY': 'taku_nodp_corp_2026',
   },
 });
 
