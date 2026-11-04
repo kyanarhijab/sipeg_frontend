@@ -10,9 +10,16 @@ import ReportPrintSignature from '../components/ReportPrintSignature.vue';
 const reportStore = useReportStore();
 const employeeStore = useEmployeeStore();
 
-const selectedMonth = ref(10);
-const selectedYear = ref(2026);
+// Ambil tanggal hari ini secara dinamis
+const now = new Date();
+const currentMonth = now.getMonth() + 1; // 1 - 12 (November = 11)
+const currentYear = now.getFullYear();
+
+// Filter & Pencarian Dinamis
+const selectedMonth = ref(currentMonth);
+const selectedYear = ref(currentYear);
 const selectedDepartment = ref('all');
+
 
 const months = [
   { value: 1, label: 'Januari' },
