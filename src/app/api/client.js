@@ -5,7 +5,7 @@ const client = axios.create({
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-    'X-API-KEY': 'taku_nodp_corp_2026',
+    'X-API-KEY': import.meta.env.VITE_API_KEY || 'taku_nodp_corp_2026',
   },
 });
 
