@@ -1,12 +1,12 @@
 import axios from 'axios';
 
 const client = axios.create({
-  // Langsung kunci ke domain backend produksi Laravel Anda
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://sipeg.ndp-tech.my.id/api',
+  // Tulis URL langsung tanpa import.meta.env
+  baseURL: 'https://sipeg.ndp-tech.my.id/api',
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-    'X-API-KEY': import.meta.env.VITE_API_KEY || 'taku_nodp_corp_2026',
+    'X-API-KEY': 'taku_nodp_corp_2026',
   },
 });
 
@@ -36,4 +36,3 @@ client.interceptors.response.use(
 );
 
 export default client;
-//
