@@ -11,9 +11,14 @@ import SalaryEditModal from '../components/SalaryEditModal.vue';
 const salaryStore = useSalaryStore();
 const employeeStore = useEmployeeStore();
 
-// Filter & Pencarian
-const selectedMonth = ref(10);
-const selectedYear = ref(2026);
+// Ambil tanggal hari ini secara dinamis
+const now = new Date();
+const currentMonth = now.getMonth() + 1; // 1 - 12 (November = 11)
+const currentYear = now.getFullYear();
+
+// Filter & Pencarian Dinamis
+const selectedMonth = ref(currentMonth);
+const selectedYear = ref(currentYear);
 const selectedStatus = ref('all');
 const searchQuery = ref('');
 
