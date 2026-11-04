@@ -1,11 +1,81 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/modules/auth/stores/authStore';
 import AppSidebar from '@/components/AppSidebar.vue';
+import client from '@/app/api/client';
 
 const router = useRouter();
 const authStore = useAuthStore();
+
+// State Dinamis
+const totalEmployees = ref(0);
+const totalPayrollCurrentMonth = ref(0);
+const isLoading = ref(true);
+
+// Bulan & Tahun Berjalan Dinamis
+const now = new Date();
+const currentMonthNumber = now.getMonth() + 1; // 1 - 12
+const currentYear = now.getFullYear();
+
+const monthNames = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+];
+
+const currentMonthName = computed(() => monthNames[currentMonthNumber - 1]);
+
+// Format Mata Uang Rupiah
+const formatRupiah = (val) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(val || 0);
+};
+
+// Ambil Data Statistik Riil dari Backend
+const fetchDashboardData = async () => {
+  isLoading.value = true;
+  try {
+    // 1. Ambil jumlah karyawan riil
+    const empRes = await client.get('/employees');
+    // Cek apakah response berupa paginasi Laravel (total) atau array biasa
+    if (empRes.data?.total !== undefined) {
+      totalEmployees.value = empRes.data.total;
+    } else if (Array.isArray(empRes.data)) {
+      totalEmployees.value = empRes.data.length;
+    } else if (Array.isArray(empRes.data?.data)) {
+      totalEmployees.value = empRes.data.total || empRes.data.data.length;
+    }
+
+    // 2. Ambil transaksi penggajian periode bulan aktif saat ini
+    const salaryRes = await client.get('/salaries', {
+      params: {
+        month: currentMonthNumber,
+        year: currentYear,
+      },
+    });
+
+    // Hitung total penggajian (jika backend mengembalikan summary atau list transaksi)
+    if (salaryRes.data?.summary?.total_paid !== undefined) {
+      totalPayrollCurrentMonth.value = salaryRes.data.summary.total_paid;
+    } else if (Array.isArray(salaryRes.data?.data)) {
+      totalPayrollCurrentMonth.value = salaryRes.data.data.reduce(
+        (sum, item) => sum + Number(item.net_salary || 0),
+        0
+      );
+    }
+  } catch (error) {
+    console.error('Gagal mengambil ringkasan data dashboard:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchDashboardData();
+});
 
 const handleLogout = async () => {
   await authStore.logout();
@@ -32,31 +102,46 @@ const handleLogout = async () => {
       <div class="p-8 space-y-6">
         <!-- Grid Statistik Ringkas -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Total Karyawan -->
           <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center">
             <div class="w-12 h-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xl mr-4">
               <i class="fa-solid fa-users"></i>
             </div>
             <div>
               <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Karyawan</p>
-              <h3 class="text-2xl font-bold text-slate-800 mt-1">3 Orang</h3>
+              <h3 class="text-2xl font-bold text-slate-800 mt-1">
+                <span v-if="isLoading" class="text-base text-slate-400 font-normal">Memuat...</span>
+                <span v-else>{{ totalEmployees }} Orang</span>
+              </h3>
             </div>
           </div>
+
+          <!-- Total Penggajian Bulan Berjalan -->
           <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center">
             <div class="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mr-4">
               <i class="fa-solid fa-wallet"></i>
             </div>
             <div>
-              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Penggajian (Okt)</p>
-              <h3 class="text-2xl font-bold text-slate-800 mt-1">Rp 15.850.000</h3>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Total Penggajian ({{ currentMonthName.substring(0, 3) }})
+              </p>
+              <h3 class="text-2xl font-bold text-emerald-600 font-mono mt-1">
+                <span v-if="isLoading" class="text-base text-slate-400 font-normal">Memuat...</span>
+                <span v-else>{{ formatRupiah(totalPayrollCurrentMonth) }}</span>
+              </h3>
             </div>
           </div>
+
+          <!-- Status Periode Bulan Berjalan -->
           <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center">
             <div class="w-12 h-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xl mr-4">
-              <i class="fa-solid fa-file-lines"></i>
+              <i class="fa-solid fa-calendar-check"></i>
             </div>
             <div>
               <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Status Periode</p>
-              <h3 class="text-2xl font-bold text-slate-800 mt-1">Aktif (Oktober)</h3>
+              <h3 class="text-2xl font-bold text-slate-800 mt-1">
+                Aktif ({{ currentMonthName }})
+              </h3>
             </div>
           </div>
         </div>
