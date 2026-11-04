@@ -1,5 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
+// 1. Import langsung di atas (Static Import)
+import LoginView from '@/modules/auth/views/LoginView.vue';
+import DashboardView from '@/modules/dashboard/views/DashboardView.vue';
+import EmployeeListView from '@/modules/employees/views/EmployeeListView.vue';
+import SalaryTransactionView from '@/modules/salaries/views/SalaryTransactionView.vue';
+import ReportSalaryView from '@/modules/reports/views/ReportSalaryView.vue';
+
 const routes = [
   {
     path: '/',
@@ -8,27 +15,27 @@ const routes = [
   {
     path: '/login',
     name: 'login',
-    component: () => import('@/modules/auth/views/LoginView.vue'),
+    component: LoginView,
   },
   {
     path: '/dashboard',
     name: 'dashboard',
-    component: () => import('@/modules/dashboard/views/DashboardView.vue'),
+    component: DashboardView,
   },
   {
     path: '/karyawan',
     name: 'karyawan',
-    component: () => import('@/modules/employees/views/EmployeeListView.vue'),
+    component: EmployeeListView,
   },
   {
     path: '/transaksi',
     name: 'transaksi',
-    component: () => import('@/modules/salaries/views/SalaryTransactionView.vue'),
+    component: SalaryTransactionView, // <-- Menggunakan variabel hasil static import
   },
   {
     path: '/laporan',
     name: 'laporan',
-    component: () => import('@/modules/reports/views/ReportSalaryView.vue'),
+    component: ReportSalaryView,
   },
 ];
 
