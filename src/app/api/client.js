@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const client = axios.create({
+  // Langsung kunci ke domain backend produksi Laravel Anda
   baseURL: import.meta.env.VITE_API_BASE_URL || 'https://sipeg.ndp-tech.my.id/api',
   headers: {
     'Accept': 'application/json',
